@@ -1,237 +1,223 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <queue>
 #include <functional>
 #include <utility>
 
-#define MAX_SIZE 100
-#define MAX_INT 100000
+#define inf 1e9
+typedef std::string string;
+typedef std::pair<int,int> pairINT;
+
+// Comparator to set increasing order to priority queue
+struct increasingPQ {
+    constexpr bool operator()(
+        std::pair<int,int> const& a,
+        std::pair<int,int> const& b)
+        const noexcept
+    {
+        return a.second > b.second;
+    }
+};
 
 class adj_list{
-	public:
-		int vertex;
-		int weight;
-		int cost;
-		adj_list *next;
-		adj_list(int vertex, int weight){
-			this->vertex = vertex;
-			this->weight = weight;
-			this->next = NULL;
-			this->cost = 0;
-		}
-		
+    public:
+        int item;
+        int w;
+        adj_list *next;
+        adj_list(int item, int weight){
+            this->item = item;
+            this->w = weight;
+            this->next = NULL;
+        }
 };
 
 class graph{
-	public:
-		adj_list *vertices[MAX_SIZE];
-		short visited[MAX_SIZE];
-		int n;
-		graph(int n){
-			this->n = n;
-            for(int i=0; i< n; i++){
-                this->vertices[i] = NULL;
-                this->visited[i] = 0;
+    public:
+        int n;
+        std::vector<adj_list*> vertices;
+        std::vector<short> *visited;
 
+        graph(int N){
+            this->n = N;
+            this->visited = new std::vector<short>(N,0);
+
+            for(int i=0; i< N;i++){
+                this->vertices.push_back(NULL);
+            }
+
+        }
+        
+        void add_edge(int item1, int item2, int weight, int directed);
+        void display_nodes(int n);
+        int prim(int source, int n);
+        int getPathPrim(int n, std::vector<int> pred);
+
+};
+
+void graph::add_edge(int item1, int item2, int weight, int directed){
+    adj_list *vex = new adj_list(item2, weight);
+    if(this->vertices[item1] == NULL)
+        this->vertices[item1] = vex;
+    else{
+        adj_list *aux1 = this->vertices[item1];
+        while(aux1->next != NULL)
+            aux1 = aux1->next;
+        aux1->next = vex;
+    }
+
+    if(!directed){
+        adj_list *vex2 = new adj_list(item1, weight);
+    if(this->vertices[item2] == NULL)
+        this->vertices[item2] = vex2;
+        else{
+            adj_list *aux2 = this->vertices[item2];
+            while(aux2->next != NULL)
+                aux2 = aux2->next;
+            aux2->next = vex2;
+        }
+    }
+}
+
+int graph::prim(int source, int n)
+{
+    std::vector<int> cost(n, inf);
+
+    std::priority_queue<pairINT, std::vector<pairINT> , increasingPQ > pqueue;
+    std::vector<int> pred(n,-1);
+    int visited = 0;
+    
+    std::vector<int> inQueue(n,1);
+
+
+    cost[source] = 0;
+    pqueue.push({source, 0});
+
+    // Make sure that MST has n vertices
+    while(!pqueue.empty() && visited < n){
+        
+        // Analyse the shortest distance from source to u so far, 
+        // i.e., the head of the priority queue
+        int u = pqueue.top().first;
+
+        pqueue.pop();
+        // Analyze adjacents of u if u is not in queue:
+        if(inQueue[u] == 1){
+
+            // Vertice is in MST and was visited already
+            inQueue[u] = 0;
+            visited += 1;
+
+
+            // Get all of the adjacent nodes of u
+            adj_list *auxU = this->vertices[u];
+            while(auxU != NULL){
+
+                // Get adjacent node id and weight uv
+                int v = auxU->item;
+                int weightUV = auxU->w;
+                // If the cost of the new weight uv is shorter
+                // than the current cost to v, and vertex v is not in queue, 
+                // switch the minimum cost to v and put v and its new 
+                // shorter cost in the priority queue. 
+
+                    if(inQueue[v] == 1 && weightUV < cost[v]){
+                        cost[v] = weightUV;
+                        pqueue.push({v, cost[v]});
+                        pred[v] = u;
+
+                    }
+
+                auxU = auxU->next;
+            }
+
+        }
+    }
+
+    return this->getPathPrim(n, pred);
+
+}
+
+int graph::getPathPrim(int n, std::vector<int> pred){
+
+    int mst_cost = 0;
+    std::cout << std::endl << "MST of G:" << std::endl;
+    for(int i=1; i< n; i++){
+        for(adj_list *j= this->vertices[i]; j != NULL ; j = j->next){
+            if(pred[i] == j->item){
+                std::cout << "Edge " << i+1 << "-" << j->item + 1 << ", w= " << j->w << "  ";
+                mst_cost += j->w;
             }
         }
-        std::vector<int> MST;
-        std::vector<int> franja;
-		int cost;
-		
-        void add_edge(int vertex1, int vertex2, int weight, int directed);
-		void display_nodes(int n);
-		int prim();
-};
+        std::cout << std::endl;
+    }
 
-void graph::add_edge(int vertex1, int vertex2, int weight, int directed){
-	adj_list *v1 = new adj_list(vertex2, weight);
-	if(this->vertices[vertex1] == NULL){
-		this->vertices[vertex1] = v1;
-	}
-	else{
-		adj_list *aux1 = this->vertices[vertex1];
-		while(aux1->next != NULL){
-			aux1 = aux1->next;
-		}
-		aux1->next = v1;
-	}
+    return mst_cost;
 
-	if (!directed){
-		adj_list *v2 = new adj_list(vertex1, weight);
-	
-		if(this->vertices[vertex2] == NULL){
-			this->vertices[vertex2] = v2;
-		}
-		else{
-			adj_list *aux2 = this->vertices[vertex2];
-			while(aux2->next != NULL){
-				aux2 = aux2->next;
-			}
-			aux2->next = v2;
-		}
-	}
-};
+}
+
 
 void graph::display_nodes(int n){
-	// n: vertices
-	for(int i=0; i<n; i++){
-		if(this->vertices[i] != NULL){
-			adj_list *aux = this->vertices[i];
-			std::cout << i << " -> ";
-			while(aux != NULL){
-				if (aux->next != NULL){
-					std::cout << aux->vertex<<", "<< aux->weight<<" -> ";
-				}
-				else{
-					std::cout << aux->vertex<<", "<< aux->weight;
-				}
-
-				aux = aux->next;
-			}
-			std::cout << std::endl;
-		}
-	}
-};
-
-adj_list *remove_item(adj_list *head, int item){
-	
-	adj_list *previous = NULL;
-	adj_list *current = head;
-	while(current -> vertex != item && current != NULL)
-	{
-		previous = current;
-		current = current -> next;
-	}
-	if(current == NULL) return head;
-	else if(previous == NULL)
-		head = current -> next;
-	else
-		previous -> next = current -> next;
-	free(current);
-	return head;
-}
-
-adj_list* delete_item(adj_list* curr, int x) {
-    adj_list* next;
-    if (curr == NULL) { // Found the tail
-        std::cout << "not found\n";
-        return NULL;
-    } else if (curr->vertex == x) { // Found one to delete
-        next = curr->next;
-        free(curr);
-        return next;
-    } else { // Just keep going
-        curr->next = delete_item(curr->next, x);
-        return curr;
+    // Print n vertices
+    for(int i=0; i< n; i++){
+        if(this->vertices[i] != NULL){
+            adj_list *aux = this->vertices[i];
+            std::cout << i << " -> ";
+            while(aux != NULL){
+                std::cout << aux->item << " -> ";
+                aux = aux->next;
+            }
+            std::cout << std::endl;
+        }
     }
 }
 
-adj_list* remove_edge(adj_list* G, int v){
-	G = delete_item(G,v);	
-	return G;
-}
+graph* readInputFile(string inputPath)
+{
+    // Reading input file
+    // line 1: n_vertices m_edges
+    // line 2: v_1 v_2 w_1
+    // line 3: v_3 v_4 w_2
+    // ...
+    // line m+1
+    int m, n;
+    int u, v, w;
+    string line;
+    std::ifstream file(inputPath);
 
-
-
-int graph::prim(){
-	
-	int min = MAX_INT;
-	int index = 0;
-	int aux1, aux2, i;
-	std::vector<std::vector<int>> tree;
-	std::vector<std::vector<int>> subtree;
-	// OS N VERTICES SAO ENUMERADOS DE 0 A N-1.
-	this->franja.push_back(0);
-	
-while(1){
-	if(this->franja.size() == this->n){
-		for(int ii = 0; ii<this->franja.size(); ii++){
-			std::cout<<this->franja[ii]<<",";
-		}
-		break;
-	}
-	for( i=0; i<this->franja.size(); i++){
-	
-		adj_list *aux = this->vertices[this->franja[i]];
-		
-		aux1 = this->franja[i];
-		while (aux->next != NULL){
-			aux2 = aux->vertex;
-			int flag = 1;
-			for(int iii=0; iii<this->franja.size(); iii++){
-					if(aux2 == this->franja[iii] ){
-						flag = 0;
-					}
-				}
-			if(flag){
-				if (aux->weight < min){				
-				
-				
-					aux1 = this->franja[i];
-					min = aux->weight;
-					aux2 = aux->vertex;
-				
-				// else ?		
-				}
-			}
-
-			
-			aux = aux->next;
-		}
-	}
-		std::vector<int> vect{aux1,aux2,min};
-		tree.push_back(vect);
-		//for (int j=0; j<this->franja.size();j++){
-			for(int k=0; k<2; k++){
-				std::cout << vect[k] << ","; 
-			}
-		//}
-			std::cout<<std::endl;
-		//int u = this->franja[i];
-		//int v = aux2;
-		this->vertices[aux1] = remove_edge(this->vertices[aux1],aux2);
-		//std::cout << aux1 << std::endl;
-		//std::cout << aux2 << std::endl;
-		this->vertices[aux2] = remove_edge(this->vertices[aux2],aux1);
-		
-		
-		this->franja.push_back(aux2);
-		//custo += min;
-		//aux2->cost = custo;
-		
-		//this->MST.push_back(aux2->vertex);
-		
-		//index ++;
-		// cost = 16
-		// MST = [0,7]
-		// go to next vertex
-
-		//aux = this->vertices[aux2];
-		
-	min = MAX_INT;
-}
-
-}
-
-int main(int argc, const char** argv){
-	int m,n,u,v,w;
-	std::cout << "Enter n vertices and m arestas:" << std::endl;
-	std::cin >> n >> m;
-
-	graph *G = new graph(n);
-
-	 std::cout <<"Enter " << m << " edges and weights:\n";
-	  for(int i=0; i<m; i++){
-        std::cin >> u >> v >> w;
-        G->add_edge(u, v, w, false); // false : undirected
-
-    }
-    std::cout << std::endl;
-    G->prim();
-    //G->display_nodes(n);
+    graph *gp;
     
+    if(file.is_open()){
+        // Save n vertices and m edges
+        file >> n >> m;
+        gp = NULL;
+        gp = new graph(n); // Initialize graph G with n vertices
+        while(std::getline(file, line))
+        {
+            // Read and save each vertice u,v and weighted edge uv in G
+            file >> u >> v >> w;
+            std::cout << u << " "<< v << " " << w << std::endl;
+            gp->add_edge(u-1, v-1, w, false); // false => undirected graph
+
+        }
+        file.close();
+    }
+
+    return gp;
+
+}
+
+
+int main(int argc, const char** argv) {
+
+    int m, n, u, v, w;
+    // Let n vertices be 1,2, ..., n
+    graph *gp = readInputFile("data_mst.txt");
+
+    int min_cost_mst = gp->prim(0, gp->n);
+    std::cout << "Minimum spanning tree of G has cost: " << min_cost_mst << std::endl;
+
     return 0;
 }
