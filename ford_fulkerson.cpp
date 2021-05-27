@@ -162,7 +162,7 @@ graph* readInputFile(string inputPath)
 
 int main()
 {
-	graph *gp = readInputFile("data_w.txt");
+	graph *gp = readInputFile("data_wd.txt");
 
 	cout << "Fluxo maximo de G igual a= " << fordFulkerson(gp, 0, gp->n - 1);
 
