@@ -13,3 +13,5 @@ Professor Rian Pinheiro
 * [Ford-Fulkerson](https://github.com/hglps/graph_implementation/blob/main/ford_fulkerson.cpp)
 * [Prim](https://github.com/hglps/graph_implementation/blob/main/prim.cpp)
 * Kruskal (em breve)
+
+obs.: os vértices esto enumerados de 1 a n em todos os algoritmos.
