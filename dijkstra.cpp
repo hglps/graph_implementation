@@ -38,24 +38,16 @@ class adj_list{
 class graph{
     public:
         int n;
-        //adj_list *vertices[MAX_SIZE];
-        // short visited[MAX_SIZE];
         std::vector<adj_list*> vertices;
         std::vector<short> *visited;
 
         graph(int N){
             this->n = N;
-            //this->vertices = new std::vector<adj_list*>(N, nullptr);
-            //this->vertices = new std::list<adj_list>[N];
             this->visited = new std::vector<short>(N,0);
-            //std::list<adj_list>::iterator i;
 
             for(int i=0; i< N;i++){
-                // adj_list *l;
                 this->vertices.push_back(NULL);
             }
-
-
         }
         
         void add_edge(int item1, int item2, int weight, int directed);
@@ -189,7 +181,7 @@ graph* readInputFile(string inputPath)
             // Read and save each vertice u,v and weighted edge uv in G
             file >> u >> v >> w;
             std::cout << u << " "<< v << " " << w << std::endl;
-            gp->add_edge(u-1, v-1, w, true);
+            gp->add_edge(u-1, v-1, w, false); // false = undirected graph
 
         }
         file.close();
