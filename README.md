@@ -14,4 +14,4 @@ Professor Rian Pinheiro
 * [Prim](https://github.com/hglps/graph_implementation/blob/main/prim.cpp)
 * Kruskal (em breve)
 
-obs.: os vértices esto enumerados de 1 a n em todos os algoritmos.
+obs.: os vértices esto enumerados de 1 a n em todos os algoritmos. Os algoritmos de Prim e Kruskal precisam ler o arquivo [data_mst.txt](https://github.com/hglps/graph_implementation/blob/main/data_mst.txt).
